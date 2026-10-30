@@ -1,0 +1,84 @@
+.calendar-wrapper {
+    width: 100%;
+    max-width: 800px; /* Dimensione ideale e leggibile per desktop */
+    margin: 0 auto;  /* Centra il calendario nella card */
+}
+
+.calendar-title {
+    text-align: center;
+    font-size: 1.3rem;
+    font-weight: 600;
+    margin-bottom: 12px;
+}
+
+.calendar-table {
+    table-layout: fixed;
+    width: 100%;
+}
+
+.calendar-table th {
+    text-align: center;
+    background: #f8f9fa;
+    font-size: 0.85rem;
+    padding: 8px 0;
+}
+
+/* Celle della tabella compatte */
+.calendar-day {
+    padding: 0 !important;
+    border: 1px solid #dee2e6;
+    cursor: pointer;
+    transition: background 0.2s;
+}
+
+.calendar-day:hover {
+    background: #f5f5f5;
+}
+
+.day-content {
+    aspect-ratio: 1.1 / 1; /* Rende le celle leggermente più compatte verticalmente su desktop */
+    position: relative;
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.day-number {
+    position: absolute;
+    top: 4px;
+    right: 6px;
+    font-weight: bold;
+    font-size: 0.85rem;
+}
+
+.empty-day {
+    background: #fafafa;
+    aspect-ratio: 1.1 / 1;
+    border: 1px solid #dee2e6;
+}
+
+/* Colorazioni prenotazioni */
+.booking-yellow { background-color: #fff3cd !important; }
+.booking-green { background-color: #d1e7dd !important; }
+.booking-blue { background-color: #cfe2ff !important; }
+.booking-orange { background-color: #ffe5b4 !important; }
+.booking-purple { background-color: #e2d5f9 !important; }
+
+/* Responsive per smartphone */
+@media (max-width: 576px) {
+    .calendar-wrapper {
+        max-width: 100%; /* Su smartphone sfrutta tutto lo schermo */
+    }
+    .day-content, .empty-day {
+        aspect-ratio: 1 / 1; /* Torna quadrato su mobile */
+    }
+    .calendar-title {
+        font-size: 1.1rem;
+    }
+    .day-number {
+        font-size: 0.75rem;
+        top: 3px;
+        right: 4px;
+    }
+}

@@ -1,0 +1,46 @@
+[
+    {
+        "id": 1,
+        "cliente_id": 8,
+        "dal": "2026-10-27",
+        "al": "2026-10-31",
+        "costo_totale": "1000",
+        "caparra": "1000",
+        "saldo": 0,
+        "stato": "SALDO_PAGATO",
+        "note": ""
+    },
+    {
+        "id": 4,
+        "cliente_id": 11,
+        "dal": "2026-10-05",
+        "al": "2026-10-11",
+        "costo_totale": "1200",
+        "caparra": "1200",
+        "saldo": 0,
+        "stato": "CONCLUSA",
+        "note": ""
+    },
+    {
+        "id": 5,
+        "cliente_id": 11,
+        "dal": "2026-11-16",
+        "al": "2026-11-22",
+        "costo_totale": 1200,
+        "caparra": 300,
+        "saldo": 900,
+        "stato": "CAPARRA_VERSATA",
+        "note": "test"
+    },
+    {
+        "id": 6,
+        "cliente_id": 12,
+        "dal": "2026-10-26",
+        "al": "2026-10-26",
+        "costo_totale": 1500,
+        "caparra": 700,
+        "saldo": 800,
+        "stato": "CAPARRA_VERSATA",
+        "note": "note testnote testnote testnote test"
+    }
+]

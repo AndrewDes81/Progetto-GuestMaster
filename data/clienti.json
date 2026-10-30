@@ -1,0 +1,74 @@
+[
+    {
+        "id": 1,
+        "nome": "Andrea",
+        "cognome": "De Santis",
+        "codice_fiscale": "GRSMCL83C56Z112U",
+        "email": "andreadesantis.da@gmail.com",
+        "cellulare": "3201846797",
+        "indirizzo": "",
+        "citta": "",
+        "note": "",
+        "data_creazione": "2026-10-26 09:44:28"
+    },
+    {
+        "id": 8,
+        "nome": "Andrea",
+        "cognome": "De Santis",
+        "codice_fiscale": "DSNNDR81C06F152H",
+        "email": "andreadesantis.da@gmail.com",
+        "cellulare": "3332194445",
+        "indirizzo": "",
+        "citta": "",
+        "note": "",
+        "data_creazione": "2026-10-26 11:59:18"
+    },
+    {
+        "id": 9,
+        "nome": "immacolata",
+        "cognome": "De Santis",
+        "codice_fiscale": "GRSMCL87C56Z112U",
+        "email": "andreadesantis.da@gmail.com",
+        "cellulare": "+393332194448",
+        "indirizzo": "",
+        "citta": "",
+        "note": "",
+        "data_creazione": "2026-10-26 13:30:31"
+    },
+    {
+        "id": 10,
+        "nome": "Andreaaaa",
+        "cognome": "De Santis",
+        "codice_fiscale": "GRSMCL84C56Z112U",
+        "email": "andreadesantis.da@gmail.com",
+        "cellulare": "3332194445",
+        "indirizzo": "",
+        "citta": "",
+        "note": "",
+        "data_creazione": "2026-10-26 15:39:08"
+    },
+    {
+        "id": 11,
+        "nome": "Gabriele",
+        "cognome": "De Santis",
+        "codice_fiscale": "DSNGBR15E29B180U",
+        "email": "gabriele.da@gmail.com",
+        "cellulare": "123456787",
+        "indirizzo": "",
+        "citta": "",
+        "note": "",
+        "data_creazione": "2026-10-27 12:58:27"
+    },
+    {
+        "id": 12,
+        "nome": "Christian",
+        "cognome": "De Santis",
+        "codice_fiscale": "DSNCHS17C06B180H",
+        "email": "christian@gmail.com",
+        "cellulare": "3331245787",
+        "indirizzo": "",
+        "citta": "",
+        "note": "",
+        "data_creazione": "2026-10-30 10:13:32"
+    }
+]
