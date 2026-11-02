@@ -13,11 +13,12 @@ $mesi = [
 
 $giorniSettimana = ['Lun', 'Mar', 'Mer', 'Gio', 'Ven', 'Sab', 'Dom'];
 
-$numeroGiorni = cal_days_in_month(CAL_GREGORIAN, $mese, $anno);
-$primoGiorno = date('N', strtotime("$anno-$mese-01"));
+// Sostituito cal_days_in_month con la funzione nativa date('t') per evitare errori di estensione mancante
+$numeroGiorni = (int)date('t', strtotime("$anno-$mese-01"));
+$primoGiorno = (int)date('N', strtotime("$anno-$mese-01"));
 
 // Leggiamo tutte le prenotazioni per colorare il calendario
-$prenotazioni = leggiJson('prenotazioni.json');
+$prenotazioni = function_exists('leggiJson') ? leggiJson('prenotazioni.json') : [];
 ?>
 
 <div class="calendar-wrapper">
@@ -56,18 +57,22 @@ $prenotazioni = leggiJson('prenotazioni.json');
                     $prenotazioneTrovata = null;
 
                     // Verifichiamo se questa data cade in una prenotazione esistente
-                    foreach ($prenotazioni as $p) {
-                        if ($dataCorrente >= $p['dal'] && $dataCorrente <= $p['al']) {
-                            $prenotazioneTrovata = $p;
-                            $coloreSfondo = coloreDaStato($p['stato']);
-                            break;
+                    if (is_array($prenotazioni)) {
+                        foreach ($prenotazioni as $p) {
+                            if (isset($p['dal'], $p['al']) && $dataCorrente >= $p['dal'] && $dataCorrente <= $p['al']) {
+                                $prenotazioneTrovata = $p;
+                                if (function_exists('coloreDaStato') && isset($p['stato'])) {
+                                    $coloreSfondo = coloreDaStato($p['stato']);
+                                }
+                                break;
+                            }
                         }
                     }
 
                     // Prepariamo stili e attributi se il giorno è occupato
                     $stile = $coloreSfondo ? "style='background-color: {$coloreSfondo}; color: white;'" : "";
                     $classeOccupato = $prenotazioneTrovata ? "occupato" : "";
-                    $idPrenotazioneAttr = $prenotazioneTrovata ? "data-prenotazione-id='{$prenotazioneTrovata['id']}'" : "";
+                    $idPrenotazioneAttr = $prenotazioneTrovata && isset($prenotazioneTrovata['id']) ? "data-prenotazione-id='{$prenotazioneTrovata['id']}'" : "";
 
                     echo "
                         <td class='calendar-day text-center position-relative $classeOccupato'
@@ -83,14 +88,14 @@ $prenotazioni = leggiJson('prenotazioni.json');
                         </td>
                     ";
 
-                    if ($colonna % 7 == 0) {
+                    if ($colonna % 7 == 0 && $giorno < $numeroGiorni) {
                         echo '</tr><tr>';
                     }
 
                     $colonna++;
                 }
 
-                // Giorni vuoti finali per chiudere la tabella (con il meno corretto)
+                // Giorni vuoti finali per chiudere la tabella
                 while (($colonna - 1) % 7 != 0) {
                     echo '<td class="empty-day bg-light"></td>';
                     $colonna++;

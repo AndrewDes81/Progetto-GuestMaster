@@ -1,6 +1,18 @@
 <?php
 // index.php
+require_once 'php/config/db.php';
 require_once 'includes/statistiche.php';
+
+// Recuperiamo tutte le strutture dal database PostgreSQL per il selettore
+try {
+    $stmtStrutture = $pdo->query("SELECT id, nome, colore FROM strutture ORDER BY nome ASC");
+    $listaStrutture = $stmtStrutture->fetchAll();
+} catch (PDOException $e) {
+    $listaStrutture = [];
+}
+
+// Eventuale struttura attualmente selezionata (es. via GET o sessione)
+$strutturaSelezionata = isset($_GET['struttura_id']) ? $_GET['struttura_id'] : 'all';
 ?>
 
 <!DOCTYPE html>
@@ -66,6 +78,7 @@ require_once 'includes/statistiche.php';
                 </div>
             </div>
             <button type="button" class="btn-close text-reset" id="sidebarCloseBtn" aria-label="Close"></button>
+            
         </div>
 
         <ul class="nav flex-column mb-auto">
@@ -76,7 +89,7 @@ require_once 'includes/statistiche.php';
                 </a>
             </li>
 
-            <!-- AZIONI RAPIDE A TENDINA -->
+            <!-- AZIONI RAPIDE A TENDINA (Modificato per avviare il flusso booking-first dal modale cliente) -->
             <li class="nav-item mt-3">
                 <a class="nav-link d-flex justify-content-between align-items-center text-dark bg-light fw-semibold" data-bs-toggle="collapse" href="#azioniRapideMenu" role="button" aria-expanded="false" aria-controls="azioniRapideMenu">
                     <span class="d-flex align-items-center gap-2">
@@ -89,17 +102,13 @@ require_once 'includes/statistiche.php';
                 <div class="collapse ps-3 mt-1" id="azioniRapideMenu">
                     <ul class="nav flex-column gap-1">
                         <li class="nav-item">
-                            <a href="#" class="nav-link py-1 text-primary small" data-bs-toggle="modal" data-bs-target="#clienteModal">
-                                <i class="bi bi-person-plus-fill"></i> Nuovo Cliente
-                            </a>
-                        </li>
-                        <li class="nav-item">
                             <a href="#" class="nav-link py-1 text-secondary small" id="btnCercaClienteDesktop">
                                 <i class="bi bi-search"></i> Cerca Cliente
                             </a>
                         </li>
                         <li class="nav-item">
-                            <a href="#" class="nav-link py-1 text-success btn-prenotazione-trigger small" data-bs-toggle="modal" data-bs-target="#prenotazioneModal">
+                            <!-- Cliccando qui si apre il modale del cliente, avviando il flusso a 2 step -->
+                            <a href="#" class="nav-link py-1 text-success small" data-bs-toggle="modal" data-bs-target="#clienteModal">
                                 <i class="bi bi-calendar-plus-fill"></i> Nuova Prenotazione
                             </a>
                         </li>
@@ -128,6 +137,12 @@ require_once 'includes/statistiche.php';
                     <span>Ospiti</span>
                 </a>
             </li>
+            <li class="nav-item">
+    <a href="#" class="nav-link" id="btnNfcNav">
+        <i class="bi bi-phone"></i>
+        <span>Check-in NFC</span>
+    </a>
+</li>  
         </ul>
 
         <hr class="my-3 text-muted">
@@ -156,7 +171,7 @@ require_once 'includes/statistiche.php';
                     <div class="card shadow-sm border-0 py-2 px-3 bg-white h-100">
                         <span class="text-muted small fw-semibold text-uppercase" style="font-size: 0.65rem;">Incassi Mese</span>
                         <h5 class="fw-bold mb-0 mt-1" style="color: #29577B;">
-                            € <?= number_format($totaleMeseIncassato, 2, ',', '.') ?>
+                            € <?= isset($totaleMeseIncassato) ? number_format($totaleMeseIncassato, 2, ',', '.') : '0,00' ?>
                         </h5>
                     </div>
                 </div>
@@ -166,21 +181,23 @@ require_once 'includes/statistiche.php';
                     <div class="card shadow-sm border-0 py-2 px-3 bg-white h-100">
                         <span class="text-muted small fw-semibold text-uppercase" style="font-size: 0.65rem;">Incassi Anno</span>
                         <h5 class="fw-bold mb-0 mt-1" style="color: #29577B;">
-                            € <?= number_format($totaleAnnoIncassato, 2, ',', '.') ?>
+                            € <?= isset($totaleAnnoIncassato) ? number_format($totaleAnnoIncassato, 2, ',', '.') : '0,00' ?>
                         </h5>
                     </div>
                 </div>
 
-                <!-- Selettore Struttura Attiva (Senza Icona) -->
+                <!-- Selettore Struttura Attiva Dinamico da DB -->
                 <div class="col-12 col-md-6 col-lg-4 ms-auto">
                     <div class="card shadow-sm border-0 py-2 px-3 bg-white">
                         <div class="w-100">
                             <span class="text-muted small fw-semibold text-uppercase d-block" style="font-size: 0.65rem;">Struttura Attiva</span>
                             <select id="selectStrutturaGlobal" class="form-select form-select-sm fw-bold border-0 p-0 text-dark shadow-none bg-transparent" style="cursor: pointer; font-size: 0.9rem;">
-                                <option value="all" selected>🏢 Tutte le strutture</option>
-                                <option value="1">🏡 Villa al Mare</option>
-                                <option value="2">🏙️ Appartamento Centro</option>
-                                <option value="3">🌿 B&B Il Girasole</option>
+                                <option value="all" <?= ($strutturaSelezionata == 'all') ? 'selected' : '' ?>>🏢 Tutte le strutture</option>
+                                <?php foreach ($listaStrutture as $struttura): ?>
+                                    <option value="<?= $struttura['id'] ?>" <?= ($strutturaSelezionata == $struttura['id']) ? 'selected' : '' ?>>
+                                        🏡 <?= htmlspecialchars($struttura['nome']) ?>
+                                    </option>
+                                <?php endforeach; ?>
                             </select>
                         </div>
                     </div>
@@ -233,22 +250,25 @@ require_once 'includes/statistiche.php';
                 <!-- Corpo del Calendario -->
                 <div class="card-body p-2 p-md-3">
                     <div id="calendar">
-                        <?php include 'includes/calendario.php'; ?>
+                        <?php 
+                        if (file_exists('includes/calendario.php')) {
+                            include 'includes/calendario.php'; 
+                        } else {
+                            echo '<p class="text-muted text-center my-3">File calendario.php non trovato.</p>';
+                        }
+                        ?>
                     </div>
                 </div>
             </div>
 
-            <!-- LEGENDA -->
+            <!-- LEGENDA DINAMICA -->
             <div class="d-flex flex-wrap gap-3 mt-3 px-1">
-                <small class="d-flex align-items-center gap-1 text-muted">
-                    <span class="badge rounded-circle p-1" style="background-color: #29577B;"> </span> Villa al Mare
-                </small>
-                <small class="d-flex align-items-center gap-1 text-muted">
-                    <span class="badge rounded-circle p-1 bg-success"> </span> Appartamento Centro
-                </small>
-                <small class="d-flex align-items-center gap-1 text-muted">
-                    <span class="badge rounded-circle p-1 bg-warning"> </span> B&B Il Girasole
-                </small>
+                <?php foreach ($listaStrutture as $struttura): ?>
+                    <small class="d-flex align-items-center gap-1 text-muted">
+                        <span class="badge rounded-circle p-1" style="background-color: <?= !empty($struttura['colore']) ? htmlspecialchars($struttura['colore']) : '#29577B' ?>;"> </span> 
+                        <?= htmlspecialchars($struttura['nome']) ?>
+                    </small>
+                <?php endforeach; ?>
             </div>
         </main>
     </div>

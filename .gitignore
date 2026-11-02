@@ -1,0 +1,10 @@
+# Dati locali del container PostgreSQL (da ignorare assolutamente)
+pgdata/
+docker-data/
+*.log
+
+# File sensibili / credenziali (se usate file .env)
+.env
+
+# MA MANTIENI IL DB INIT (non deve essere ignorato):
+# !db/init.sql

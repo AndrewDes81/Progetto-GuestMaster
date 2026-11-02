@@ -1,21 +1,23 @@
 <?php
+// php/clienti/salva_cliente.php
 
 header('Content-Type: application/json');
 
-require_once '../config/json.php';
+// Includiamo la connessione al database PostgreSQL via PDO
+require_once __DIR__ . '/../config/db.php';
 
 try {
-    // Lettura dati form
-    $nome = trim($_POST['nome'] ?? '');
-    $cognome = trim($_POST['cognome'] ?? '');
-    $codiceFiscale = trim($_POST['codice_fiscale'] ?? '');
-    $email = trim($_POST['email'] ?? '');
-    $cellulare = trim($_POST['cellulare'] ?? '');
-    $indirizzo = trim($_POST['indirizzo'] ?? '');
-    $citta = trim($_POST['citta'] ?? '');
-    $note = trim($_POST['note'] ?? '');
+    // Lettura dati dal form
+    $nome          = trim($_POST['nome'] ?? '');
+    $cognome       = trim($_POST['cognome'] ?? '');
+    $codiceFiscale = strtoupper(trim($_POST['codice_fiscale'] ?? ''));
+    $email         = trim($_POST['email'] ?? '');
+    $cellulare     = trim($_POST['cellulare'] ?? '');
+    $indirizzo     = trim($_POST['indirizzo'] ?? '');
+    $citta         = trim($_POST['citta'] ?? '');
+    $note          = trim($_POST['note'] ?? '');
 
-    // Validazioni
+    // Validazioni di base
     if (empty($nome) || empty($cognome)) {
         throw new Exception('Nome e cognome sono obbligatori.');
     }
@@ -28,48 +30,54 @@ try {
         throw new Exception('Email non valida.');
     }
 
-    // Lettura clienti
-    $clienti = leggiJson('clienti.json');
+    // 1. Controllo duplicati basato sul Codice Fiscale in PostgreSQL
+    $stmtCheck = $pdo->prepare("SELECT * FROM clienti WHERE UPPER(codice_fiscale) = :cf LIMIT 1");
+    $stmtCheck->execute(['cf' => $codiceFiscale]);
+    $clienteEsistente = $stmtCheck->fetch();
 
-    // Controllo duplicati basato SOLO sul Codice Fiscale
-    foreach ($clienti as $cliente) {
-        if (
-            !empty($cliente['codice_fiscale']) &&
-            strtoupper(trim($cliente['codice_fiscale'])) === strtoupper($codiceFiscale)
-        ) {
-            // Trovato! Restituisce i dati del cliente esistente senza duplicarlo
-            echo json_encode([
-                'success' => true,
-                'cliente_esistente' => true,
-                'cliente' => $cliente
-            ]);
-
-            exit;
-        }
+    if ($clienteEsistente) {
+        // Trovato! Restituisce i dati del cliente esistente dal DB senza duplicarlo
+        echo json_encode([
+            'success' => true,
+            'cliente_esistente' => true,
+            'cliente' => $clienteEsistente
+        ]);
+        exit;
     }
 
-    // Nuovo ID tramite funzione centralizzata se non esiste
-    $nuovoId = prossimoId('ultimo_cliente_id');
+    // 2. Inserimento del nuovo cliente su PostgreSQL
+    $sqlInsert = "INSERT INTO clienti (nome, cognome, codice_fiscale, email, cellulare, indirizzo, citta, note, data_creazione) 
+                  VALUES (:nome, :cognome, :codice_fiscale, :email, :cellulare, :indirizzo, :citta, :note, NOW())
+                  RETURNING id, data_creazione";
 
-    // Creazione cliente
+    $stmtInsert = $pdo->prepare($sqlInsert);
+    $stmtInsert->execute([
+        'nome'           => $nome,
+        'cognome'        => $cognome,
+        'codice_fiscale' => $codiceFiscale,
+        'email'          => $email,
+        'cellulare'      => $cellulare,
+        'indirizzo'      => $indirizzo,
+        'citta'          => $citta,
+        'note'           => $note
+    ]);
+
+    // Recuperiamo l'ID appena generato da PostgreSQL (SERIAL/BIGSERIAL)
+    $nuoviDati = $stmtInsert->fetch();
+
+    // Prepariamo l'oggetto cliente completo da restituire al JS
     $nuovoCliente = [
-        'id' => $nuovoId,
-        'nome' => $nome,
-        'cognome' => $cognome,
-        'codice_fiscale' => strtoupper($codiceFiscale),
-        'email' => $email,
-        'cellulare' => $cellulare,
-        'indirizzo' => $indirizzo,
-        'citta' => $citta,
-        'note' => $note,
-        'data_creazione' => date('Y-m-d H:i:s')
+        'id'             => $nuoviDati['id'],
+        'nome'           => $nome,
+        'cognome'        => $cognome,
+        'codice_fiscale' => $codiceFiscale,
+        'email'          => $email,
+        'cellulare'      => $cellulare,
+        'indirizzo'      => $indirizzo,
+        'citta'          => $citta,
+        'note'           => $note,
+        'data_creazione' => $nuoviDati['data_creazione']
     ];
-
-    // Aggiunta all'array
-    $clienti[] = $nuovoCliente;
-
-    // Salvataggio
-    salvaJson('clienti.json', $clienti);
 
     echo json_encode([
         'success' => true,

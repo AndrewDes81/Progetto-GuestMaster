@@ -42,5 +42,16 @@
         "saldo": 800,
         "stato": "CAPARRA_VERSATA",
         "note": "note testnote testnote testnote test"
+    },
+    {
+        "id": 7,
+        "cliente_id": 1,
+        "dal": "2026-11-03",
+        "al": "2026-11-10",
+        "costo_totale": 1200,
+        "caparra": 200,
+        "saldo": 1000,
+        "stato": "CAPARRA_VERSATA",
+        "note": "note di test"
     }
 ]
