@@ -3,16 +3,17 @@
 require_once 'php/config/db.php';
 require_once 'includes/statistiche.php';
 
-// Recuperiamo tutte le strutture dal database PostgreSQL per il selettore
-try {
-    $stmtStrutture = $pdo->query("SELECT id, nome, colore FROM strutture ORDER BY nome ASC");
-    $listaStrutture = $stmtStrutture->fetchAll();
-} catch (PDOException $e) {
-    $listaStrutture = [];
-}
-
-// Eventuale struttura attualmente selezionata (es. via GET o sessione)
 $strutturaSelezionata = isset($_GET['struttura_id']) ? $_GET['struttura_id'] : 'all';
+$listaStrutture = [];
+
+try {
+    // Eseguiamo la query e forziamo il recupero dei dati
+    $stmtStrutture = $pdo->query("SELECT id, nome FROM strutture ORDER BY nome ASC");
+    $listaStrutture = $stmtStrutture->fetchAll(PDO::FETCH_ASSOC);
+} catch (Exception $e) {
+    // Se c'è un errore nella query, lo stampiamo a schermo per capire cos'è
+    echo "<div style='color: red; padding: 10px; background: #ffe6e6;'>Errore database: " . $e->getMessage() . "</div>";
+}
 ?>
 
 <!DOCTYPE html>
@@ -67,7 +68,7 @@ $strutturaSelezionata = isset($_GET['struttura_id']) ? $_GET['struttura_id'] : '
 
     <!-- 2. SIDEBAR FISSA A SINISTRA -->
     <aside class="sidebar shadow-sm" id="sidebarMenu">
-        
+            
         <!-- Header interno alla Sidebar per Mobile -->
         <div class="sidebar-header-mobile d-lg-none">
             <div class="d-flex align-items-center gap-2">
@@ -78,7 +79,6 @@ $strutturaSelezionata = isset($_GET['struttura_id']) ? $_GET['struttura_id'] : '
                 </div>
             </div>
             <button type="button" class="btn-close text-reset" id="sidebarCloseBtn" aria-label="Close"></button>
-            
         </div>
 
         <ul class="nav flex-column mb-auto">
@@ -89,7 +89,7 @@ $strutturaSelezionata = isset($_GET['struttura_id']) ? $_GET['struttura_id'] : '
                 </a>
             </li>
 
-            <!-- AZIONI RAPIDE A TENDINA (Modificato per avviare il flusso booking-first dal modale cliente) -->
+            <!-- AZIONI RAPIDE A TENDINA -->
             <li class="nav-item mt-3">
                 <a class="nav-link d-flex justify-content-between align-items-center text-dark bg-light fw-semibold" data-bs-toggle="collapse" href="#azioniRapideMenu" role="button" aria-expanded="false" aria-controls="azioniRapideMenu">
                     <span class="d-flex align-items-center gap-2">
@@ -107,9 +107,14 @@ $strutturaSelezionata = isset($_GET['struttura_id']) ? $_GET['struttura_id'] : '
                             </a>
                         </li>
                         <li class="nav-item">
-                            <!-- Cliccando qui si apre il modale del cliente, avviando il flusso a 2 step -->
+                            <!-- Flusso booking-first via modale cliente -->
                             <a href="#" class="nav-link py-1 text-success small" data-bs-toggle="modal" data-bs-target="#clienteModal">
                                 <i class="bi bi-calendar-plus-fill"></i> Nuova Prenotazione
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a href="#" class="nav-link py-1 text-primary small" data-bs-toggle="modal" data-bs-target="#strutturaModal">
+                                <i class="bi bi-house-door-fill"></i> Nuova Struttura
                             </a>
                         </li>
                     </ul>
@@ -126,7 +131,8 @@ $strutturaSelezionata = isset($_GET['struttura_id']) ? $_GET['struttura_id'] : '
                 </a>
             </li>
             <li class="nav-item">
-                <a href="#" class="nav-link">
+                <!-- COLLEGATO AL MODALE GESTIONE STRUTTURE -->
+                <a href="#" class="nav-link" data-bs-toggle="modal" data-bs-target="#gestioneStruttureModal">
                     <i class="bi bi-house-door"></i>
                     <span>Strutture</span>
                 </a>
@@ -137,19 +143,13 @@ $strutturaSelezionata = isset($_GET['struttura_id']) ? $_GET['struttura_id'] : '
                     <span>Ospiti</span>
                 </a>
             </li>
-            <li class="nav-item">
-    <a href="#" class="nav-link" id="btnNfcNav">
-        <i class="bi bi-phone"></i>
-        <span>Check-in NFC</span>
-    </a>
-</li>  
         </ul>
 
         <hr class="my-3 text-muted">
 
         <ul class="nav flex-column">
             <li class="nav-item">
-                <a href="#" class="nav-link">
+                <a href="#" class="nav-link" data-bs-toggle="modal" data-bs-target="#impostazioniModal">
                     <i class="bi bi-gear"></i>
                     <span>Impostazioni</span>
                 </a>
@@ -191,7 +191,7 @@ $strutturaSelezionata = isset($_GET['struttura_id']) ? $_GET['struttura_id'] : '
                     <div class="card shadow-sm border-0 py-2 px-3 bg-white">
                         <div class="w-100">
                             <span class="text-muted small fw-semibold text-uppercase d-block" style="font-size: 0.65rem;">Struttura Attiva</span>
-                            <select id="selectStrutturaGlobal" class="form-select form-select-sm fw-bold border-0 p-0 text-dark shadow-none bg-transparent" style="cursor: pointer; font-size: 0.9rem;">
+                            <select id="selectStrutturaGlobal" name="struttura_id" class="form-select form-select-sm fw-bold border-0 p-0 text-dark shadow-none bg-transparent" style="cursor: pointer; font-size: 0.9rem;">
                                 <option value="all" <?= ($strutturaSelezionata == 'all') ? 'selected' : '' ?>>🏢 Tutte le strutture</option>
                                 <?php foreach ($listaStrutture as $struttura): ?>
                                     <option value="<?= $struttura['id'] ?>" <?= ($strutturaSelezionata == $struttura['id']) ? 'selected' : '' ?>>
@@ -212,7 +212,7 @@ $strutturaSelezionata = isset($_GET['struttura_id']) ? $_GET['struttura_id'] : '
                         <span class="text-muted small fw-semibold d-none d-sm-inline">Periodo:</span>
 
                         <!-- Selettore Mese -->
-                        <div class="input-group input-group-sm" style="width: 140px;">
+                        <div class="input-group input-group-sm" style="width: 160px;">
                             <span class="input-group-text bg-light border-end-0 text-muted"><i class="bi bi-calendar-month"></i></span>
                             <select id="mese" class="form-select form-select-sm fw-bold border-start-0 bg-light shadow-none">
                                 <?php
@@ -231,7 +231,7 @@ $strutturaSelezionata = isset($_GET['struttura_id']) ? $_GET['struttura_id'] : '
                         </div>
 
                         <!-- Selettore Anno -->
-                        <div class="input-group input-group-sm" style="width: 110px;">
+                        <div class="input-group input-group-sm" style="width: 150px;">
                             <span class="input-group-text bg-light border-end-0 text-muted"><i class="bi bi-calendar-event"></i></span>
                             <select id="anno" class="form-select form-select-sm fw-bold border-start-0 bg-light shadow-none text-center">
                                 <?php
@@ -279,6 +279,9 @@ $strutturaSelezionata = isset($_GET['struttura_id']) ? $_GET['struttura_id'] : '
     if (file_exists('includes/modals/modal_prenotazione.php')) { include 'includes/modals/modal_prenotazione.php'; }
     if (file_exists('includes/modals/modal_dettaglio.php')) { include 'includes/modals/modal_dettaglio.php'; }
     if (file_exists('includes/modals/modal_cerca_cliente.php')) { include 'includes/modals/modal_cerca_cliente.php'; }
+    if (file_exists('includes/modals/modal_impostazioni.php')) { include 'includes/modals/modal_impostazioni.php'; }
+    if (file_exists('includes/modals/modal_strutture.php')) { include 'includes/modals/modal_strutture.php'; }
+    if (file_exists('includes/modals/modal_gestione_strutture.php')) { include 'includes/modals/modal_gestione_strutture.php'; }
     ?>
 
     <!-- Bootstrap JS -->
@@ -287,6 +290,7 @@ $strutturaSelezionata = isset($_GET['struttura_id']) ? $_GET['struttura_id'] : '
     <script src="assets/js/cerca_cliente.js"></script>
     <script src="assets/js/prenotazioni.js"></script>
     <script src="assets/js/calendario.js"></script>
+    <script src="assets/js/strutture.js"></script>
 
     <script>
         const sidebar = document.getElementById('sidebarMenu');

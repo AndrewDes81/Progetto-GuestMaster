@@ -1,7 +1,9 @@
 <?php
 // php/salva_prenotazione.php
 header('Content-Type: application/json');
-require_once __DIR__ . '/config/db.php';
+
+// Includiamo la connessione al database in modo assoluto
+require_once $_SERVER['DOCUMENT_ROOT'] . '/php/config/db.php';
 
 try {
     // Riceviamo i dati in formato JSON dal frontend JS
@@ -31,29 +33,37 @@ try {
     if (!$clienteId) {
         $sqlCliente = "INSERT INTO clienti (
             nome, cognome, codice_fiscale, sesso, data_nascita, 
-            luogo_nascita, provincia_nascita, tipo_documento, numero_documento,
-            rilasciato_da, data_scadenza, email, cellulare
+            luogo_nascita, provincia_nascita, stato_nascita, tipo_documento, numero_documento,
+            rilasciato_da, data_emissione, data_scadenza, email, cellulare,
+            indirizzo, citta, provincia_residenza, stato_residenza
         ) VALUES (
             :nome, :cognome, :cf, :sesso, :data_nascita,
-            :luogo_nascita, :provincia_nascita, :tipo_doc, :num_doc,
-            :rilasciato_da, :data_scadenza, :email, :cellulare
+            :luogo_nascita, :provincia_nascita, :stato_nascita, :tipo_doc, :num_doc,
+            :rilasciato_da, :data_emissione, :data_scadenza, :email, :cellulare,
+            :indirizzo, :citta, :provincia_residenza, :stato_residenza
         ) RETURNING id";
 
         $stmtCliente = $pdo->prepare($sqlCliente);
         $stmtCliente->execute([
-            ':nome'              => $input['nome'] ?? '',
-            ':cognome'           => $input['cognome'] ?? '',
-            ':cf'                => !empty($input['codice_fiscale']) ? strtoupper($input['codice_fiscale']) : null,
-            ':sesso'             => $input['sesso'] ?? null,
-            ':data_nascita'      => $input['data_nascita'] ?: null,
-            ':luogo_nascita'     => $input['luogo_nascita'] ?? null,
-            ':provincia_nascita' => $input['provincia_nascita'] ?? null,
-            ':tipo_doc'          => $input['tipo_documento'] ?? null,
-            ':num_doc'           => $input['numero_documento'] ?? null,
-            ':rilasciato_da'     => $input['rilasciato_da'] ?? null,
-            ':data_scadenza'     => $input['data_scadenza'] ?: null,
-            ':email'             => $input['email'] ?? null,
-            ':cellulare'         => $input['cellulare'] ?? null,
+            ':nome'                => $input['nome'] ?? '',
+            ':cognome'             => $input['cognome'] ?? '',
+            ':cf'                  => !empty($input['codice_fiscale']) ? strtoupper($input['codice_fiscale']) : null,
+            ':sesso'               => $input['sesso'] ?? null,
+            ':data_nascita'        => !empty($input['data_nascita']) ? $input['data_nascita'] : null,
+            ':luogo_nascita'       => $input['luogo_nascita'] ?? null,
+            ':provincia_nascita'   => $input['provincia_nascita'] ?? null,
+            ':stato_nascita'       => $input['stato_nascita'] ?? 'ITALIA',
+            ':tipo_doc'            => $input['tipo_documento'] ?? null,
+            ':num_doc'             => $input['numero_documento'] ?? null,
+            ':rilasciato_da'       => $input['rilasciato_da'] ?? null,
+            ':data_emissione'      => !empty($input['data_emissione']) ? $input['data_emissione'] : null,
+            ':data_scadenza'       => !empty($input['data_scadenza']) ? $input['data_scadenza'] : null,
+            ':email'               => $input['email'] ?? null,
+            ':cellulare'           => $input['cellulare'] ?? null,
+            ':indirizzo'           => $input['indirizzo'] ?? null,
+            ':citta'               => $input['citta'] ?? null,
+            ':provincia_residenza' => $input['provincia_residenza'] ?? null,
+            ':stato_residenza'     => $input['stato_residenza'] ?? 'ITALIA',
         ]);
 
         $clienteId = $stmtCliente->fetchColumn();
@@ -63,15 +73,16 @@ try {
     // 2. GESTIONE PRENOTAZIONE
     // --------------------------------------------------------
     $sqlPrenotazione = "INSERT INTO prenotazioni (
-        cliente_id, stanza_id, data_arrivo, data_partenza, numero_ospiti, prezzo_totale, note
+        cliente_id, struttura_id, stanza_id, data_arrivo, data_partenza, numero_ospiti, prezzo_totale, note
     ) VALUES (
-        :cliente_id, :stanza_id, :data_arrivo, :data_partenza, :numero_ospiti, :prezzo_totale, :note
+        :cliente_id, :struttura_id, :stanza_id, :data_arrivo, :data_partenza, :numero_ospiti, :prezzo_totale, :note
     ) RETURNING id";
 
     $stmtPren = $pdo->prepare($sqlPrenotazione);
     $stmtPren->execute([
         ':cliente_id'    => $clienteId,
-        ':stanza_id'     => $input['stanza_id'],
+        ':struttura_id'  => $input['struttura_id'] ?? null,
+        ':stanza_id'     => $input['stanza_id'] ?? null,
         ':data_arrivo'   => $input['data_arrivo'],
         ':data_partenza' => $input['data_partenza'],
         ':numero_ospiti' => $input['numero_ospiti'] ?? 1,

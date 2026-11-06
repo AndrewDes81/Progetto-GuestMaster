@@ -168,6 +168,22 @@ body {
     box-shadow: none !important;
 }
 
+/* Forza lo scrolling corretto sui modali Bootstrap */
+.modal-dialog-scrollable {
+    max-height: calc(100vh - 3.5rem) !important;
+}
+
+.modal-dialog-scrollable .modal-content {
+    max-height: 85vh !important;
+    display: flex !important;
+    flex-direction: column !important;
+}
+
+.modal-dialog-scrollable .modal-body {
+    overflow-y: auto !important;
+    flex: 1 1 auto !important;
+}
+
 /* Gestione testo responsive per le card incassi su schermi piccoli */
 @media (max-width: 576px) {
     .text-responsive {

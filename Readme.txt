@@ -10,3 +10,6 @@ CONCLUSA		|	Il soggiorno è terminato.		|	GRIGIO					|
 					(PAGAMENTI CHIUSI BENE)			|							|
 ANNULLATA		|	Prenotazione cancellata.		|	ROSSO					|
 ---------------------------------------------------------------------------------
+
+04/11/2026
+Creata la struttura modale per l'inserimento delle strutture. Bisogna gestire il salvataggio che a quanto pare non funziona.
