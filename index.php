@@ -138,7 +138,7 @@ try {
                 </a>
             </li>
             <li class="nav-item">
-                <a href="#" class="nav-link">
+                <a href="#" class="nav-link" id="navOspiti" data-bs-toggle="modal" data-bs-target="#gestioneOspitiModal">
                     <i class="bi bi-people"></i>
                     <span>Ospiti</span>
                 </a>
@@ -282,6 +282,7 @@ try {
     if (file_exists('includes/modals/modal_impostazioni.php')) { include 'includes/modals/modal_impostazioni.php'; }
     if (file_exists('includes/modals/modal_strutture.php')) { include 'includes/modals/modal_strutture.php'; }
     if (file_exists('includes/modals/modal_gestione_strutture.php')) { include 'includes/modals/modal_gestione_strutture.php'; }
+    if (file_exists('includes/modals/modal_gestione_ospiti.php')) { include 'includes/modals/modal_gestione_ospiti.php'; }
     ?>
 
     <!-- Bootstrap JS -->
@@ -291,6 +292,7 @@ try {
     <script src="assets/js/prenotazioni.js"></script>
     <script src="assets/js/calendario.js"></script>
     <script src="assets/js/strutture.js"></script>
+    <script src="assets/js/ospiti.js"></script>
 
     <script>
         const sidebar = document.getElementById('sidebarMenu');
