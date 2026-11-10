@@ -1,6 +1,8 @@
 <?php
-header('Content-Type: application/json');
-require_once '../config/json.php';
+header('Content-Type: application/json; charset=utf-8');
+
+// Includi il file di connessione al database PostgreSQL (correggi il percorso se necessario, es. '../../db.php')
+require_once '../../db.php'; 
 
 try {
     $id = isset($_GET['id']) ? (int)$_GET['id'] : 0;
@@ -8,29 +10,26 @@ try {
         throw new Exception('ID prenotazione non valido.');
     }
 
-    $prenotazioni = leggiJson('prenotazioni.json');
-    $prenotazioneTrovata = null;
-    foreach ($prenotazioni as $p) {
-        if ($p['id'] == $id) {
-            $prenotazioneTrovata = $p;
-            break;
-        }
-    }
+    // 1. Cerchiamo la prenotazione nel database PostgreSQL
+    $sqlP = "SELECT * FROM prenotazioni WHERE id = :id";
+    $stmtP = $pdo->prepare($sqlP);
+    $stmtP->execute(['id' => $id]);
+    $prenotazioneTrovata = $stmtP->fetch(PDO::FETCH_ASSOC);
 
     if (!$prenotazioneTrovata) {
         throw new Exception('Prenotazione non trovata.');
     }
 
-    // Cerchiamo i dati del cliente associato
-    $clienti = leggiJson('clienti.json');
+    // 2. Cerchiamo i dati del cliente associato (usando clienti_id dalla prenotazione)
     $clienteTrovato = null;
-    foreach ($clienti as $c) {
-        if ($c['id'] == $prenotazioneTrovata['cliente_id']) {
-            $clienteTrovato = $c;
-            break;
-        }
+    if (!empty($prenotazioneTrovata['clienti_id'])) {
+        $sqlC = "SELECT id, nome, cognome, codice_fiscale, cellulare, email FROM clienti WHERE id = :cliente_id";
+        $stmtC = $pdo->prepare($sqlC);
+        $stmtC->execute(['cliente_id' => $prenotazioneTrovata['clienti_id']]);
+        $clienteTrovato = $stmtC->fetch(PDO::FETCH_ASSOC);
     }
 
+    // Restituiamo il JSON pulito al frontend (identico a prima, ma preso da DB)
     echo json_encode([
         'success' => true,
         'prenotazione' => $prenotazioneTrovata,
@@ -43,3 +42,4 @@ try {
         'message' => $e->getMessage()
     ]);
 }
+?>

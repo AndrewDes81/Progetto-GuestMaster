@@ -9,7 +9,8 @@
             </div>
 
             <form id="formCliente" class="d-flex flex-column h-100" style="overflow: hidden;">
-                
+                <!-- Campo nascosto per gestire la modifica -->
+                <input type="hidden" name="id" id="clienteIdModale">
                 <!-- Aggiunto overflow-y: auto e max-height calcolata per attivare lo scrolling fluido -->
                 <div class="modal-body" style="overflow-y: auto; max-height: calc(90vh - 130px);">
                     

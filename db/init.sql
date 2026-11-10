@@ -70,6 +70,8 @@ CREATE TABLE prenotazioni (
     data_partenza   DATE NOT NULL,
     numero_ospiti   INT DEFAULT 1,
     prezzo_totale   NUMERIC(10,2) DEFAULT 0.00,
+    caparra         NUMERIC(10,2) DEFAULT 0.00,
+    saldo          NUMERIC(10,2) DEFAULT 0.00,
     stato           VARCHAR(50) DEFAULT 'confermata',
     note            TEXT,
     data_creazione  TIMESTAMP DEFAULT CURRENT_TIMESTAMP

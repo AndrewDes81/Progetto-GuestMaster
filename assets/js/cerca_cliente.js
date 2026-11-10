@@ -1,10 +1,10 @@
 // assets/js/cerca_cliente.js
 
-document.addEventListener('DOMContentLoaded', function() {
+document.addEventListener('DOMContentLoaded', function () {
     const btnDesktop = document.getElementById('btnCercaClienteDesktop');
     const btnMobile = document.getElementById('btnCercaClienteMobile');
     const modalCercaEl = document.getElementById('cercaClienteModal');
-    
+
     const inputFiltro = document.getElementById('inputFiltroCliente');
     const containerClienti = document.getElementById('listaClientiTrovati');
     const sezioneStorico = document.getElementById('sezioneStoricoCliente');
@@ -17,9 +17,14 @@ document.addEventListener('DOMContentLoaded', function() {
     if (modalCercaEl) {
         const modalCerca = new bootstrap.Modal(modalCercaEl);
 
-        // Funzione per aprire la modale e caricare i dati
+        // Funzione per aprire la modale, pulire i campi e caricare i dati dal DB
         const apriModaleCerca = (e) => {
             if (e) e.preventDefault();
+            
+            // Resettiamo l'input e nascondiamo lo storico all'apertura
+            if (inputFiltro) inputFiltro.value = '';
+            if (sezioneStorico) sezioneStorico.style.display = 'none';
+
             caricaDatiPerRicerca();
             modalCerca.show();
         };
@@ -28,10 +33,10 @@ document.addEventListener('DOMContentLoaded', function() {
         if (btnMobile) btnMobile.addEventListener('click', apriModaleCerca);
     }
 
-    // Carichiamo i dati dei clienti e delle prenotazioni dai file JSON
+    // Carichiamo i dati dei clienti e delle prenotazioni dal database PostgreSQL
     function caricaDatiPerRicerca() {
-        // Carica clienti
-        fetch('data/clienti.json')
+        // 1. Carica i clienti dal database PostgreSQL
+        fetch('php/clienti/get_ospiti.php?struttura_id=all')
             .then(res => res.json())
             .then(data => {
                 tuttiIClienti = Array.isArray(data) ? data : (data.clienti || []);
@@ -39,8 +44,8 @@ document.addEventListener('DOMContentLoaded', function() {
             })
             .catch(err => console.error('Errore caricamento clienti:', err));
 
-        // Carica prenotazioni per lo storico
-        fetch('data/prenotazioni.json')
+        // 2. Carica tutte le prenotazioni dal database PostgreSQL per lo storico
+        fetch('php/prenotazioni/get_tutte_prenotazioni.php')
             .then(res => res.json())
             .then(data => {
                 tutteLePrenotazioni = Array.isArray(data) ? data : (data.prenotazioni || []);
@@ -51,7 +56,7 @@ document.addEventListener('DOMContentLoaded', function() {
     // Funzione per visualizzare la lista dei clienti come Card Responsive
     function mostraClienti(clienti) {
         if (!containerClienti) return;
-        
+
         if (clienti.length === 0) {
             containerClienti.innerHTML = `<div class="col-12 text-center text-muted py-3">Nessun cliente trovato.</div>`;
             return;
@@ -90,10 +95,17 @@ document.addEventListener('DOMContentLoaded', function() {
         attivaEventiPulsanti();
     }
 
-    // FILTRO IN TEMPO REALE DURANTE LA DIGITAZIONE (Ripristinato!)
+    // FILTRO IN TEMPO REALE DURANTE LA DIGITAZIONE
     if (inputFiltro) {
-        inputFiltro.addEventListener('input', function() {
+        inputFiltro.addEventListener('input', function () {
             const testo = this.value.toLowerCase().trim();
+
+            // Se il campo è vuoto, mostra nuovamente tutti i clienti
+            if (testo === '') {
+                mostraClienti(tuttiIClienti);
+                return;
+            }
+
             const filtrati = tuttiIClienti.filter(c => {
                 const nome = (c.nome || '').toLowerCase();
                 const cognome = (c.cognome || '').toLowerCase();
@@ -111,10 +123,10 @@ document.addEventListener('DOMContentLoaded', function() {
     function attivaEventiPulsanti() {
         // Pulsante Storico Soggiorni
         document.querySelectorAll('.btn-storico').forEach(btn => {
-            btn.addEventListener('click', function() {
+            btn.addEventListener('click', function () {
                 const clienteId = this.getAttribute('data-id');
                 const cliente = tuttiIClienti.find(c => String(c.id) === String(clienteId));
-                
+
                 if (cliente) {
                     mostraStoricoCliente(cliente);
                 }
@@ -123,10 +135,10 @@ document.addEventListener('DOMContentLoaded', function() {
 
         // Pulsante Seleziona per Prenotazione
         document.querySelectorAll('.btn-seleziona').forEach(btn => {
-            btn.addEventListener('click', function() {
+            btn.addEventListener('click', function () {
                 const clienteId = this.getAttribute('data-id');
                 const cliente = tuttiIClienti.find(c => String(c.id) === String(clienteId));
-                
+
                 if (cliente) {
                     // Chiudiamo la modale di ricerca
                     const modalCercaEl = document.getElementById('cercaClienteModal');
@@ -140,8 +152,8 @@ document.addEventListener('DOMContentLoaded', function() {
                         const inputClienteId = document.getElementById('prenotazione_cliente_id');
                         const inputInfoCliente = document.getElementById('infoClienteSelezionato');
                         if (inputClienteId) inputClienteId.value = cliente.id;
-                        if (inputInfoCliente) inputInfoCliente.value = `${cliente.nome} ${cliente.cognome} - ${cliente.cellulare || ''}`;
-                        
+                        if (inputInfoCliente) inputInfoCliente.value = `${cliente.nome} ${cliente.cognome}\n${cliente.cellulare || ''}`;
+
                         const modalPrenotazioneEl = document.getElementById('prenotazioneModal');
                         if (modalPrenotazioneEl) {
                             new bootstrap.Modal(modalPrenotazioneEl).show();

@@ -19,6 +19,7 @@ document.addEventListener('DOMContentLoaded', () => {
                                 // Autocompila i campi con i dati trovati nel DB
                                 document.getElementById('nome').value = data.cliente.nome || '';
                                 document.getElementById('cognome').value = data.cliente.cognome || '';
+                                
                                 const emailField = document.getElementById('email');
                                 if (emailField) emailField.value = data.cliente.email || '';
                                 
@@ -34,10 +35,15 @@ document.addEventListener('DOMContentLoaded', () => {
                                 const noteField = document.getElementById('note');
                                 if (noteField) noteField.value = data.cliente.note || '';
 
-                                // Imposta l'ID cliente nascosto
+                                // Imposta l'ID cliente trovato sia nel form che nell'hidden della prenotazione se esiste
                                 const inputClienteId = document.getElementById('prenotazione_cliente_id');
                                 if (inputClienteId) {
                                     inputClienteId.value = data.cliente.id;
+                                }
+                                
+                                const hiddenIdModale = document.getElementById('clienteIdModale');
+                                if (hiddenIdModale) {
+                                    hiddenIdModale.value = data.cliente.id;
                                 }
 
                                 // Feedback visivo immediato
@@ -82,7 +88,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 // 3. Aggiorna la label descrittiva nella modale prenotazione
                 const infoCliente = document.getElementById('infoClienteSelezionato');
                 if (infoCliente) {
-                    const tipo = giaEsistente ? 'Cliente Esistente' : 'Nuovo Cliente';
+                    const tipo = giaEsistente ? 'Cliente Aggiornato/Esistente' : 'Nuovo Cliente';
                     infoCliente.value = `${tipo}: ${nomeCompleto} (ID: ${clienteId})`;
                 }
 
@@ -90,7 +96,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 const esitoDiv = document.getElementById('esitoCliente');
                 if (esitoDiv) {
                     const messaggioTesto = giaEsistente
-                        ? 'Cliente già presente nei nostri sistemi. Selezionato automaticamente!'
+                        ? 'Dati cliente salvati/aggiornati correttamente!'
                         : 'Nuovo cliente registrato correttamente!';
                     esitoDiv.innerHTML = `<div class="alert alert-success py-2 mb-2">${messaggioTesto}</div>`;
                 }
@@ -107,7 +113,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     document.activeElement.blur();
                 }
 
-                // 7. Chiudi la modale cliente e APRI SUBITO DOPO LA MODALE PRENOTAZIONE (Step 2)
+                // 7. Chiudi la modale cliente e gestisci il flusso successivo
                 setTimeout(() => {
                     const modalClienteEl = document.getElementById('clienteModal');
                     if (modalClienteEl) {
@@ -115,12 +121,23 @@ document.addEventListener('DOMContentLoaded', () => {
                         modalCliente.hide();
                     }
 
+                    // Se la tabella ospiti è visibile (perché siamo nella gestione ospiti), ricaricala!
+                    if (typeof caricaOspiti === 'function') {
+                        caricaOspiti();
+                    }
+
                     this.reset();
+                    
+                    // Pulisci l'ID nascosto della modifica
+                    const hiddenIdModale = document.getElementById('clienteIdModale');
+                    if (hiddenIdModale) hiddenIdModale.value = '';
+
                     if (esitoDiv) esitoDiv.innerHTML = '';
 
-                    // APRE AUTOMATICAMENTE IL FORM DI PRENOTAZIONE (Step 2)
+                    // NOTA: Apriamo la prenotazione solo se provenivamo da quel flusso, 
+                    // oppure puoi regolarlo se stavi solo modificando dalla lista ospiti.
                     const modalPrenotazioneEl = document.getElementById('prenotazioneModal');
-                    if (modalPrenotazioneEl) {
+                    if (modalPrenotazioneEl && inputClienteId && inputClienteId.value) {
                         const modalPrenotazione = bootstrap.Modal.getOrCreateInstance(modalPrenotazioneEl);
                         modalPrenotazione.show();
                     }
@@ -133,7 +150,6 @@ document.addEventListener('DOMContentLoaded', () => {
                     document.body.style.paddingRight = '';
 
                     const backdrops = document.querySelectorAll('.modal-backdrop');
-                    // Rimuoviamo solo i backdrop in eccesso lasciando quello della prenotazione se si è appena aperta
                     if (backdrops.length > 1) {
                         backdrops[0].remove();
                     }

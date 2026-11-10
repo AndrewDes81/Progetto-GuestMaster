@@ -6,23 +6,29 @@ header('Content-Type: application/json');
 require_once $_SERVER['DOCUMENT_ROOT'] . '/php/config/db.php';
 
 try {
-    // Riceviamo i dati in formato JSON dal frontend JS
-    $input = json_decode(file_get_contents('php://input'), true);
+    // Supporto sia per FormData ($_POST) che per richieste JSON pure
+    $input = $_POST;
+    if (empty($input)) {
+        $json = file_get_contents('php://input');
+        if (!empty($json)) {
+            $input = json_decode($json, true) ?? [];
+        }
+    }
 
-    if (!$input) {
+    if (empty($input)) {
         throw new Exception("Dati non validi o mancanti.");
     }
 
     $pdo->beginTransaction();
 
+   // --------------------------------------------------------
+    // 1. GESTIONE CLIENTE (Uso l'ID esistente o lo creo se nuovo)
     // --------------------------------------------------------
-    // 1. GESTIONE CLIENTE (Inserimento o recupero ID esistente)
-    // --------------------------------------------------------
-    $clienteId = null;
+    $clienteId = !empty($input['cliente_id']) ? intval($input['cliente_id']) : null;
 
-    if (!empty($input['codice_fiscale'])) {
+    if (!$clienteId && !empty($input['codice_fiscale'])) {
         $stmtCheck = $pdo->prepare("SELECT id FROM clienti WHERE UPPER(codice_fiscale) = UPPER(:cf)");
-        $stmtCheck->execute([':cf' => $input['codice_fiscale']]);
+        $stmtCheck->execute([':cf' => trim($input['codice_fiscale'])]);
         $clienteEsistente = $stmtCheck->fetch();
 
         if ($clienteEsistente) {
@@ -30,6 +36,7 @@ try {
         }
     }
 
+    // Se non abbiamo ancora un ID cliente valido, procediamo con l'inserimento del nuovo cliente
     if (!$clienteId) {
         $sqlCliente = "INSERT INTO clienti (
             nome, cognome, codice_fiscale, sesso, data_nascita, 
@@ -47,7 +54,7 @@ try {
         $stmtCliente->execute([
             ':nome'                => $input['nome'] ?? '',
             ':cognome'             => $input['cognome'] ?? '',
-            ':cf'                  => !empty($input['codice_fiscale']) ? strtoupper($input['codice_fiscale']) : null,
+            ':cf'                  => !empty($input['codice_fiscale']) ? strtoupper(trim($input['codice_fiscale'])) : null,
             ':sesso'               => $input['sesso'] ?? null,
             ':data_nascita'        => !empty($input['data_nascita']) ? $input['data_nascita'] : null,
             ':luogo_nascita'       => $input['luogo_nascita'] ?? null,
@@ -73,20 +80,21 @@ try {
     // 2. GESTIONE PRENOTAZIONE
     // --------------------------------------------------------
     $sqlPrenotazione = "INSERT INTO prenotazioni (
-        cliente_id, struttura_id, stanza_id, data_arrivo, data_partenza, numero_ospiti, prezzo_totale, note
+        cliente_id, stanza_id, data_arrivo, data_partenza, numero_ospiti, prezzo_totale, caparra, saldo, note
     ) VALUES (
-        :cliente_id, :struttura_id, :stanza_id, :data_arrivo, :data_partenza, :numero_ospiti, :prezzo_totale, :note
+        :cliente_id, :stanza_id, :data_arrivo, :data_partenza, :numero_ospiti, :prezzo_totale, :caparra, :saldo, :note
     ) RETURNING id";
 
     $stmtPren = $pdo->prepare($sqlPrenotazione);
     $stmtPren->execute([
         ':cliente_id'    => $clienteId,
-        ':struttura_id'  => $input['struttura_id'] ?? null,
         ':stanza_id'     => $input['stanza_id'] ?? null,
         ':data_arrivo'   => $input['data_arrivo'],
         ':data_partenza' => $input['data_partenza'],
         ':numero_ospiti' => $input['numero_ospiti'] ?? 1,
         ':prezzo_totale' => $input['prezzo_totale'] ?? 0.00,
+        ':caparra'       => $input['caparra'] ?? 0.00,
+        ':saldo'          => $input['saldo'] ?? 0.00,
         ':note'          => $input['note'] ?? ''
     ]);
 

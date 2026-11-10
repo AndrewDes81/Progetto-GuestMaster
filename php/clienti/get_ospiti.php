@@ -1,33 +1,31 @@
 <?php
-// Imposta l'intestazione per restituire JSON
 header('Content-Type: application/json; charset=utf-8');
+require_once $_SERVER['DOCUMENT_ROOT'] . '/php/config/db.php';
 
-// Includi il file di connessione al database (assicurati che il percorso sia corretto, es. '../db.php')
-require_once '../db.php'; 
-
-// Recupera il parametro struttura_id passato via GET dalla fetch di JavaScript
-$struttura_id = isset($_GET['struttura_id']) ? $_GET['struttura_id'] : 'all';
+$query = isset($_GET['q']) ? trim($_GET['q']) : '';
 
 try {
-    if ($struttura_id === 'all' || empty($struttura_id)) {
-        // Se non c'è una struttura specifica selezionata, prendiamo tutti i clienti
-        $sql = "SELECT id, nome, cognome, email, cellulare FROM clienti ORDER BY cognome, nome ASC";
-        $stmt = $pdo->query($sql);
-        $ospiti = $stmt->fetchAll(PDO::FETCH_ASSOC);
-    } else {
-        // Filtriamo i clienti in base alla struttura attiva (supponendo che la tabella clienti abbia la colonna struttura_id)
-        $sql = "SELECT id, nome, cognome, email, cellulare FROM clienti WHERE struttura_id = :struttura_id ORDER BY cognome, nome ASC";
+    if (!empty($query) && strlen($query) >= 2) {
+        // Se l'utente sta scrivendo e digita almeno 2 caratteri, filtriamo
+        $sql = "SELECT id, nome, cognome, codice_fiscale, cellulare, email, indirizzo, citta 
+                FROM clienti 
+                WHERE nome ILIKE :q OR cognome ILIKE :q OR cellulare ILIKE :q OR codice_fiscale ILIKE :q 
+                ORDER BY cognome, nome ASC LIMIT 10";
         $stmt = $pdo->prepare($sql);
-        $stmt->execute(['struttura_id' => $struttura_id]);
-        $ospiti = $stmt->fetchAll(PDO::FETCH_ASSOC);
+        $stmt->execute(['q' => "%$query%"]);
+    } else {
+        // Se il campo è vuoto (es. all'apertura della modale), restituisce TUTTI i clienti del DB
+        $sql = "SELECT id, nome, cognome, codice_fiscale, cellulare, email, indirizzo, citta 
+                FROM clienti 
+                ORDER BY cognome, nome ASC";
+        $stmt = $pdo->query($sql);
     }
 
-    // Restituisce i dati in formato JSON pulito
-    echo json_encode($ospiti);
+    $clienti = $stmt->fetchAll(PDO::FETCH_ASSOC);
+    echo json_encode($clienti);
 
 } catch (PDOException $e) {
-    // In caso di errore del database, restituisce un codice di errore HTTP 500 e il messaggio JSON
     http_response_code(500);
-    echo json_encode(["errore" => "Errore di connessione o query: " . $e->getMessage()]);
+    echo json_encode(["errore" => $e->getMessage()]);
 }
 ?>
