@@ -206,6 +206,26 @@ body {
     display: block;
 }
 
+/* 1. La modale del cliente deve stare tassativamente SOPRA quella degli ospiti */
+#clienteModal {
+    z-index: 1065 !important;
+}
+
+/* 2. La modale di gestione ospiti sta sotto */
+#gestioneOspitiModal {
+    z-index: 1050 !important;
+}
+
+/* 3. Gestione pulita dei doppi sfondi (backdrop) di Bootstrap */
+.modal-backdrop {
+    z-index: 1045 !important;
+}
+
+.modal-backdrop + .modal-backdrop {
+    z-index: 1060 !important;
+    background-color: rgba(0, 0, 0, 0.4); /* Sfondo leggermente scuro per staccare i livelli */
+}
+
 /* 4. RESPONSIVE PER MOBILE (Sotto 992px) */
 @media (max-width: 991.98px) {
     .sidebar {

@@ -2,6 +2,26 @@ document.addEventListener('DOMContentLoaded', () => {
     const form = document.getElementById('formCliente');
     if (!form) return;
 
+    // Variabile per tracciare se veniamo dal flusso "Nuova Prenotazione" della dashboard
+    let avviaFlussoPrenotazione = false;
+
+    // Intercettiamo i click sui link o pulsanti che aprono la modale cliente
+    document.querySelectorAll('[data-bs-target="#clienteModal"]').forEach(btn => {
+        btn.addEventListener('click', function() {
+            // Controlliamo se ha l'attributo data-flusso="prenotazione"
+            if (this.getAttribute('data-flusso') === 'prenotazione') {
+                avviaFlussoPrenotazione = true;
+                // Pulisci l'ID nascosto perché qui stiamo creando un cliente nuovo o associandone uno
+                const hiddenId = document.getElementById('clienteIdModale');
+                if (hiddenId) hiddenId.value = '';
+                form.reset();
+            } else {
+                // Se aperto da altre parti (es. modifica ospite), non avviamo la prenotazione
+                avviaFlussoPrenotazione = false;
+            }
+        });
+    });
+
     // --- AGGIUNTA: Ricerca live automatica per Codice Fiscale ---
     const inputCf = document.getElementById('codice_fiscale');
     if (inputCf) {
@@ -113,7 +133,8 @@ document.addEventListener('DOMContentLoaded', () => {
                     document.activeElement.blur();
                 }
 
-                // 7. Chiudi la modale cliente e gestisci il flusso successivo
+                // 7. Chiudi la modale cliente
+                // Chiudiamo la modale cliente
                 setTimeout(() => {
                     const modalClienteEl = document.getElementById('clienteModal');
                     if (modalClienteEl) {
@@ -121,25 +142,27 @@ document.addEventListener('DOMContentLoaded', () => {
                         modalCliente.hide();
                     }
 
-                    // Se la tabella ospiti è visibile (perché siamo nella gestione ospiti), ricaricala!
+                    // Se siamo nella gestione ospiti, ricarichiamo la tabella
                     if (typeof caricaOspiti === 'function') {
                         caricaOspiti();
                     }
 
+                    // Controlliamo la provenienza prima di decidere se aprire la prenotazione
+                    const provenienza = form.getAttribute('data-provenienza');
+
                     this.reset();
-                    
-                    // Pulisci l'ID nascosto della modifica
                     const hiddenIdModale = document.getElementById('clienteIdModale');
                     if (hiddenIdModale) hiddenIdModale.value = '';
-
                     if (esitoDiv) esitoDiv.innerHTML = '';
 
-                    // NOTA: Apriamo la prenotazione solo se provenivamo da quel flusso, 
-                    // oppure puoi regolarlo se stavi solo modificando dalla lista ospiti.
-                    const modalPrenotazioneEl = document.getElementById('prenotazioneModal');
-                    if (modalPrenotazioneEl && inputClienteId && inputClienteId.value) {
-                        const modalPrenotazione = bootstrap.Modal.getOrCreateInstance(modalPrenotazioneEl);
-                        modalPrenotazione.show();
+                    // APRIAMO LA PRENOTAZIONE SOLO SE LA PROVENIENZA È "prenotazione"
+                    if (provenienza === 'prenotazione') {
+                        form.removeAttribute('data-provenienza'); // pulizia
+                        const modalPrenotazioneEl = document.getElementById('prenotazioneModal');
+                        if (modalPrenotazioneEl) {
+                            const modalPrenotazione = bootstrap.Modal.getOrCreateInstance(modalPrenotazioneEl);
+                            modalPrenotazione.show();
+                        }
                     }
                 }, 1000);
 

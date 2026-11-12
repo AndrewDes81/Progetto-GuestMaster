@@ -110,20 +110,17 @@ async function apriModificaOspite(id) {
             return;
         }
 
-        // 1. Chiudiamo prima la modale di gestione ospiti corrente per evitare sovrapposizioni di sfondi
-        const modalOspitiEl = document.getElementById('gestioneOspitiModal');
-        if (modalOspitiEl) {
-            const modalOspiti = bootstrap.Modal.getInstance(modalOspitiEl);
-            if (modalOspiti) {
-                modalOspiti.hide();
-            }
+        // Impostiamo un attributo sul form per indicare che siamo in modifica (provenienza ospiti)
+        const form = document.getElementById('formCliente');
+        if (form) {
+            form.setAttribute('data-provenienza', 'ospiti');
         }
 
-        // 2. Valorizziamo l'ID nascosto per la modifica
+        // Valorizziamo l'ID nascosto per la modifica
         const hiddenId = document.getElementById('clienteIdModale');
         if (hiddenId) hiddenId.value = cliente.id || '';
 
-        // 3. Popoliamo tutti i campi del form anagrafico con i dati del DB
+        // Popoliamo tutti i campi...
         const setFieldValue = (fieldId, value) => {
             const el = document.getElementById(fieldId);
             if (el) el.value = value || '';
@@ -146,14 +143,12 @@ async function apriModificaOspite(id) {
         setFieldValue('citta', cliente.citta);
         setFieldValue('note', cliente.note);
 
-        // 4. Apriamo la modale del cliente con un piccolo timeout per pulire i backdrop precedenti
-        setTimeout(() => {
-            const modalEl = document.getElementById('clienteModal');
-            if (modalEl) {
-                const modal = bootstrap.Modal.getOrCreateInstance(modalEl);
-                modal.show();
-            }
-        }, 150);
+        // Apriamo la modale del cliente
+        const modalEl = document.getElementById('clienteModal');
+        if (modalEl) {
+            const modal = bootstrap.Modal.getOrCreateInstance(modalEl);
+            modal.show();
+        }
 
     } catch (error) {
         console.error('Errore nel recupero dei dati del cliente:', error);

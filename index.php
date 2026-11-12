@@ -108,7 +108,7 @@ try {
                         </li>
                         <li class="nav-item">
                             <!-- Flusso booking-first via modale cliente -->
-                            <a href="#" class="nav-link py-1 text-success small" data-bs-toggle="modal" data-bs-target="#clienteModal">
+                             <a href="#" class="nav-link py-1 text-success small" data-bs-toggle="modal" data-bs-target="#clienteModal" onclick="document.getElementById('formCliente').setAttribute('data-provenienza', 'prenotazione'); document.getElementById('formCliente').reset(); document.getElementById('clienteIdModale').value='';">
                                 <i class="bi bi-calendar-plus-fill"></i> Nuova Prenotazione
                             </a>
                         </li>
